@@ -1,0 +1,40 @@
+---
+- name: Periodically upload files to SFTP server
+  hosts: localhost
+  gather_facts: false
+  vars:
+    local_dir: "/path/to/local/directory"
+    sftp_host: "example.com"
+    sftp_user: "username"
+    sftp_key_file: "/path/to/ssh/key/file"
+    sftp_remote_dir: "/remote/directory"
+    proxy_url: "http://proxy.example.com:8080"
+    proxy_user: "proxy_username"
+    proxy_password: "proxy_password"
+
+  tasks:
+    - name: Check for files to upload
+      find:
+        paths: "{{ local_dir }}"
+        file_type: file
+      register: local_files
+      changed_when: false
+
+    - name: Upload files to SFTP server
+      pysftp:
+        host: "{{ sftp_host }}"
+        username: "{{ sftp_user }}"
+        private_key_file: "{{ sftp_key_file }}"
+        remote_dir: "{{ sftp_remote_dir }}"
+        proxy_url: "{{ proxy_url }}"
+        proxy_username: "{{ proxy_user }}"
+        proxy_password: "{{ proxy_password }}"
+        src: "{{ local_dir }}/{{ item.path | basename }}"
+        dest: "{{ sftp_remote_dir }}/{{ item.path | basename }}"
+      with_items: "{{ local_files.files }}"
+      when: local_files.files | length > 0
+
+  handlers:
+    - name: Wait for 4 hours
+      pause:
+        minutes: 240
