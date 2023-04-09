@@ -1,0 +1,34 @@
+---
+- name: Configure gRPC connection for Nokia SR node in mdcli mode
+  hosts: <target_host>
+  gather_facts: no
+
+  tasks:
+  - name: Set up gRPC authentication
+    nokia_sros_config:
+      lines:
+        - grpc tls-profile grpc_tls_profile
+        - certificate device
+        - tls-profile grpc_tls_profile certificate
+        - certificate trusted
+        - tls-profile grpc_tls_profile certificate-trusted
+        - certificate untrusted
+        - tls-profile grpc_tls_profile certificate-untrusted
+
+  - name: Set up gRPC channel
+    nokia_sros_config:
+      lines:
+        - grpc channel grpc_channel_profile remote-address <remote_address> tls-profile grpc_tls_profile
+        - grpc channel grpc_channel_profile remote-port <remote_port> tls-profile grpc_tls_profile
+        - grpc channel grpc_channel_profile
+
+  - name: Configure gRPC service
+    nokia_sros_config:
+      lines:
+        - grpc service grpc_service_profile channel grpc_channel_profile
+        - grpc service grpc_service_profile
+
+  - name: Commit changes
+    nokia_sros_command:
+      commands:
+        - admin save
