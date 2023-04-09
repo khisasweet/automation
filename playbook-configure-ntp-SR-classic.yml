@@ -1,0 +1,20 @@
+---
+- name: Configure NTP protocol on Nokia SR node classic
+  hosts: <target_host>
+  gather_facts: no
+
+  tasks:
+  - name: Enable NTP protocol on the router
+    nokia_sros_command:
+      commands:
+        - configure system ntp enable
+
+  - name: Set NTP server address
+    nokia_sros_config:
+      lines:
+        - ntp server <ntp_server_address>
+
+  - name: Set NTP client interval
+    nokia_sros_config:
+      lines:
+        - ntp client interval 3600
