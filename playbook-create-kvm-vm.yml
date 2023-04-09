@@ -1,0 +1,64 @@
+- name: Create and configure VM with static IP address using cloud-init
+  hosts: localhost
+  gather_facts: no
+  become: yes
+
+  vars:
+    vm_name: myvm
+    vm_ram: 2048
+    vm_disk_size: 20
+    vm_os_variant: ubuntu20.04
+    vm_bridge: virbr0
+    network_config_file: network-config.yml
+    network_config:
+      version: 2
+      ethernets:
+        ens3:
+          dhcp4: no
+          addresses:
+            - 192.168.122.100/24
+          gateway4: 192.168.122.1
+          nameservers:
+            addresses:
+              - 8.8.8.8
+              - 8.8.4.4
+
+  tasks:
+    - name: Create network-config file
+      copy:
+        content: "{{ network_config | to_yaml }}"
+        dest: "{{ network_config_file }}"
+
+    - name: Create virtual disk for VM
+      command: qemu-img create -f qcow2 {{ vm_name }}.qcow2 {{ vm_disk_size }}G creates={{ vm_name }}.qcow2
+
+    - name: Create VM using cloud-init
+      virt_install:
+        name: "{{ vm_name }}"
+        memory: "{{ vm_ram }}"
+        vcpus: 2
+        disk: "{{ vm_name }}.qcow2,size={{ vm_disk_size }}"
+        os_type: linux
+        os_variant: "{{ vm_os_variant }}"
+        cloud_init:
+          disk: "{{ network_config_file }}"
+        network:
+          - bridge: "{{ vm_bridge }}"
+        graphics: none
+        wait: yes
+
+    - name: Wait for VM to boot up
+      wait_for:
+        host: "{{ vm_name }}"
+        port: 22
+        delay: 5
+        timeout: 300
+
+    - name: Check SSH connection to VM
+      ping:
+
+    - name: Detach cloud-config file from VM
+      command: |
+        virsh change-media {{ vm_name }} sdc --eject --config
+        virsh detach-disk {{ vm_name }} sdc --config
+      when: "'sdc' in (item.device for item in hostvars[vm_name]['ansible_devices'].values())"
