@@ -1,0 +1,32 @@
+Public Shared lab -- any one can book for 3 hours and will receive the vpn file and access info to use the lab
+Dedicated lab -- users can deploy using the voucher obtained from PLM
+
+NSP Lab with classic NE
+NSP Lab with classic and MDM managed NE
+NSP Lab with classic and MDM managed NE + Cisco XRV
+NSP Lab with NRCP with traffic generators
+Combined Lab with NSP, NFMP, NRCS, NFM-T with Classic NE, PSS optical sims
+NSP Partner Certification lab with DR capability
+
+-------------
+differences from nspcloud
+
+do not use openstack
+a baremetal machine from equinix is used to host all VMs for NSP cluster, NFMP and vsims
+offcial installation procedure is used rather than openstack template
+a combination of python, ansible and bash scripts are used for automation
+after installation of NSP, NFMP, vsims,
+-- nfmp discovery rules, mediation policies
+-- oss_user, groups policies
+-- stats policies (performance and accounting)
+-- mdm discovery rules and oam policies
+-- telmetery subscriptions
+
+challenges
+-- for every new release we need to accomodate the changes in installation procedures
+-- need to accomodate the changes in the post insallation configuration steps
+-- uploading the files takes long time to the file server
+-- we can start automation testing only when the Candidate load is available
+-- license management is challeng, as we use trial licenses and needs to  update them every 90 days
+-- NE upgrade
+-- supporting and maintain of the older release
