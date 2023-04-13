@@ -1,0 +1,23 @@
+---
+- name: Read YAML file
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    yaml_file: /opt/usable_ips.yml
+
+  tasks:
+    - name: Read file
+      slurp:
+        src: "{{ yaml_file }}"
+      register: file_content
+
+    - name: Set variable from YAML content
+      set_fact:
+        my_dict: "{{ file_content['content'] | b64decode | from_yaml }}"
+    - debug: var=my_dict['deployer']
+    - debug: var=my_dict['nfmp']
+    - debug: var=my_dict['nspos']
+    - debug: var=my_dict['sdn1']
+    - debug: var=my_dict['sdn2']
+

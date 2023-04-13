@@ -1,0 +1,33 @@
+---
+- name: Calculate usable IP addresses from subnet
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    subnet_file: /opt/gw.txt
+    output_file: /opt/usable_ips.yml
+
+  tasks:
+    - name: Read subnet from file
+      slurp:
+        src: "{{ subnet_file }}"
+      register: subnet_file_content
+
+    - name: Extract subnet address
+      set_fact:
+        subnet: "{{ subnet_file_content['content'] | b64decode | regex_replace('[^0-9./]+', '') }}"
+
+    - name: Calculate usable IP addresses
+      set_fact:
+        usable_ips:
+          nspos: "{{ subnet.split('/')[0] | regex_replace('\\.[0-9]+$', '.1') }}"
+          nfmp: "{{ subnet.split('/')[0] | regex_replace('\\.[0-9]+$', '.2') }}"
+          sdn1: "{{ subnet.split('/')[0] | regex_replace('\\.[0-9]+$', '.3') }}"
+          sdn2: "{{ subnet.split('/')[0] | regex_replace('\\.[0-9]+$', '.4') }}"
+          deployer: "{{ subnet.split('/')[0] | regex_replace('\\.[0-9]+$', '.5') }}"
+
+    - name: Write usable IPs to file
+      copy:
+        content: "{{ usable_ips | to_yaml }}"
+        dest: "{{ output_file }}"
+
